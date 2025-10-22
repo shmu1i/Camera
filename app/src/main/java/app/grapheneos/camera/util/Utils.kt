@@ -85,3 +85,19 @@ fun removePendingFlagFromUri(contentResolver: ContentResolver, uri: Uri) {
         throw IOException("unable to remove IS_PENDING flag")
     }
 }
+
+/**
+ * Checks if video recording is disabled via the kt.novideo system property.
+ * Returns true if kt.novideo is set to "true", false otherwise.
+ */
+fun isVideoDisabled(): Boolean {
+    return try {
+        val systemProperties = Class.forName("android.os.SystemProperties")
+        val get = systemProperties.getMethod("get", String::class.java, String::class.java)
+        val value = get.invoke(null, "kt.novideo", "false") as String
+        value.equals("true", ignoreCase = true)
+    } catch (e: Exception) {
+        // If we can't read the property, assume video is enabled
+        false
+    }
+}

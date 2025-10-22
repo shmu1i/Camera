@@ -1412,8 +1412,9 @@ class CamConfig(private val mActivity: MainActivity) {
     private fun availableModes(): Set<CameraMode> {
         return CameraMode.entries.filter {
             when (it) {
-                CameraMode.CAMERA, CameraMode.VIDEO -> true
-                CameraMode.QR_SCAN -> mActivity !is SecureMainActivity
+                CameraMode.CAMERA -> true
+                CameraMode.VIDEO -> !app.grapheneos.camera.util.isVideoDisabled()
+                CameraMode.QR_SCAN -> false // QR scan disabled
                 else -> {
                     check(it.extensionMode != ExtensionMode.NONE)
                     val em = extensionsManager
@@ -1448,6 +1449,7 @@ class CamConfig(private val mActivity: MainActivity) {
             tabLayout.newTab().let { tab ->
                 tab.setText(mode.uiName)
 
+                tab.view.isFocusable = false
                 tab.view.setOnTouchListener { _, e ->
                     if (e.action == MotionEvent.ACTION_UP) {
                         mActivity.finalizeMode(tab)

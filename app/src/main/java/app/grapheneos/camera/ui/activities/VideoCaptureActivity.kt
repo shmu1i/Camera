@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.provider.MediaStore.EXTRA_OUTPUT
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import app.grapheneos.camera.R
+import app.grapheneos.camera.util.isVideoDisabled
 
 class VideoCaptureActivity : CaptureActivity() {
 
@@ -17,6 +19,13 @@ class VideoCaptureActivity : CaptureActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check if video recording is disabled via kt.novideo property
+        if (isVideoDisabled()) {
+            Toast.makeText(this, "Video recording is disabled on this device", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
         whiteOptionCircle = findViewById(R.id.white_option_circle)
         playPreview = findViewById(R.id.play_preview)

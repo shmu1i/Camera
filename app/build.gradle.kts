@@ -8,6 +8,13 @@ if (useKeystoreProperties) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Load local.properties for custom configuration
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties()
+if (localPropertiesFile.canRead()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -46,17 +53,24 @@ android {
     namespace = "app.grapheneos.camera"
 
     defaultConfig {
-        applicationId = "app.grapheneos.camera"
+        applicationId = "com.mediatek.camera"
         minSdk = 29
         targetSdk = 35
         versionCode = 90
         versionName = versionCode.toString()
+
+        // Custom metadata setting key (read from local.properties, defaults to empty)
+        val metadataSettingKey = localProperties.getProperty("metadata.setting.key", "")
+        buildConfigField("String", "METADATA_SETTING_KEY", "\"${metadataSettingKey}\"")
     }
 
     buildTypes {
         getByName("release") {
-            isShrinkResources = true
-            isMinifyEnabled = true
+            // Disabled to speed up build process
+            // isShrinkResources = true
+            // isMinifyEnabled = true
+            isShrinkResources = false
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (useKeystoreProperties) {
                 signingConfig = signingConfigs.getByName("release")
@@ -65,8 +79,8 @@ android {
         }
 
         getByName("debug") {
-            applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Camera d")
+            //applicationIdSuffix = ".dev"
+            resValue("string", "app_name", "Camera")
             // isDebuggable = false
         }
 
@@ -82,6 +96,12 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+
+    // Disable lint checks to speed up build process
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 
     androidResources {

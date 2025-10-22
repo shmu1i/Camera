@@ -1,0 +1,6 @@
+# Local configuration template
+# Copy this file to local.properties and customize for your environment
+
+# The Settings.Global key to read metadata from for video tagging
+# Example: metadata.setting.key=your_custom_setting_name
+metadata.setting.key=

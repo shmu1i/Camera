@@ -85,3 +85,7 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 lint/reports/
+device_sn_metadata_changes.md
+.claude/
+app/src/main/java/com/
+*.bak

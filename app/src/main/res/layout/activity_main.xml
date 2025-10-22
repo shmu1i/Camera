@@ -218,7 +218,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
                 android:clickable="true"
-                android:focusable="true"
+                android:focusable="false"
                 android:layout_gravity="center">
 
                 <ImageView
@@ -268,6 +268,7 @@
                     android:layout_gravity="center"
                     android:src="@drawable/camera_shutter"
                     android:background="@drawable/cbutton_bg"
+                    android:focusable="false"
                     android:contentDescription="@string/flip_camera"/>
 
                 <ImageButton
@@ -278,6 +279,7 @@
                     android:layout_gravity="center"
                     android:src="@drawable/done"
                     android:background="@drawable/cbutton_bg"
+                    android:focusable="false"
                     android:contentDescription="@string/flip_camera"/>
 
                 <!-- Sp usage was ignore because -->
@@ -318,7 +320,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="96dp"
                 android:clickable="true"
-                android:focusable="true"
+                android:focusable="false"
                 android:layout_gravity="center">
 
                 <ImageView
@@ -345,6 +347,7 @@
                     android:layout_height="64dp"
                     android:src="@drawable/option_circle"
                     android:layout_gravity="center"
+                    android:focusable="false"
                     android:contentDescription="@string/flip_camera"/>
 
                 <ProgressBar
@@ -461,6 +464,7 @@
             android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
             android:layout_height="30dp"
+            android:focusable="false"
             app:tabPaddingStart="16dp"
             app:tabPaddingEnd="16dp"
             app:tabRippleColor="@android:color/transparent"
@@ -504,6 +508,8 @@
             android:paddingHorizontal="16dp"
             android:background="@null"
             android:src="@drawable/settings_icon"
+            android:layout_marginTop="16dp"
+            android:focusable="false"
             android:contentDescription="@string/capture_mode"/>
 
         <TextView

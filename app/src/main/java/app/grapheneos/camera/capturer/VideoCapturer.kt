@@ -16,7 +16,10 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.MediaStore.MediaColumns
+import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.webkit.MimeTypeMap
 import androidx.camera.video.FileDescriptorOutputOptions
@@ -25,6 +28,7 @@ import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoRecordEvent
 import app.grapheneos.camera.App
+import app.grapheneos.camera.BuildConfig
 import app.grapheneos.camera.CamConfig
 import app.grapheneos.camera.CapturedItem
 import app.grapheneos.camera.ITEM_TYPE_VIDEO
@@ -117,6 +121,16 @@ class VideoCapturer(private val mActivity: MainActivity) {
                     put(MediaColumns.MIME_TYPE, mimeType)
                     put(MediaColumns.RELATIVE_PATH, DEFAULT_MEDIA_STORE_CAPTURE_PATH)
                     put(MediaColumns.IS_PENDING, 1)
+                    // Retrieve custom metadata from Settings.Global using configured key
+                    if (BuildConfig.METADATA_SETTING_KEY.isNotEmpty()) {
+                        val metadataValue = Settings.Global.getString(ctx.contentResolver, BuildConfig.METADATA_SETTING_KEY)
+                        if (!metadataValue.isNullOrEmpty()) {
+                            Log.d("VideoCapturer", "Adding metadata to tags field")
+                            put(MediaStore.Video.VideoColumns.TAGS, metadataValue)
+                        } else {
+                            Log.w("VideoCapturer", "Metadata setting not found; skipping")
+                        }
+                    }
                 }
                 uri = contentResolver.insert(CamConfig.videoCollectionUri, contentValues)
                 isPendingMediaStoreUri = true

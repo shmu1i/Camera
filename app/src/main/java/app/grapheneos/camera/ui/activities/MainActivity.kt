@@ -516,19 +516,55 @@ open class MainActivity : AppCompatActivity(),
         when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_DOWN,
             KeyEvent.KEYCODE_VOLUME_UP,
-            KeyEvent.KEYCODE_CAMERA -> {
+            KeyEvent.KEYCODE_CAMERA,
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_ENTER -> {
                 captureButton.performClick()
+                return true  // Consume the event to prevent focus navigation
             }
             KeyEvent.KEYCODE_FOCUS -> {
                 // cancel any manual focus
                 // CameraX will start the continuous autofocus (if supported) automatically
                 previewView.controller?.cameraControl?.cancelFocusAndMetering()
+                return true
             }
             KeyEvent.KEYCODE_ZOOM_IN -> {
                 cameraControl.zoomIn()
+                return true
             }
             KeyEvent.KEYCODE_ZOOM_OUT -> {
                 cameraControl.zoomOut()
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                // Switch to CAMERA mode (only if not recording and not already in camera mode)
+                if (!videoCapturer.isRecording && camConfig.isVideoMode) {
+                    // Find the CAMERA tab and call finalizeMode to animate tab selection
+                    for (i in 0 until tabLayout.tabCount) {
+                        val tab = tabLayout.getTabAt(i)
+                        if (tab?.tag == CameraMode.CAMERA) {
+                            finalizeMode(tab)
+                            break
+                        }
+                    }
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                // Switch to VIDEO mode (only if not recording and video is available)
+                if (!videoCapturer.isRecording &&
+                    !camConfig.isVideoMode &&
+                    !app.grapheneos.camera.util.isVideoDisabled()) {
+                    // Find the VIDEO tab and call finalizeMode to animate tab selection
+                    for (i in 0 until tabLayout.tabCount) {
+                        val tab = tabLayout.getTabAt(i)
+                        if (tab?.tag == CameraMode.VIDEO) {
+                            finalizeMode(tab)
+                            break
+                        }
+                    }
+                }
+                return true
             }
         }
         return super.onKeyUp(keyCode, event)
@@ -539,11 +575,23 @@ open class MainActivity : AppCompatActivity(),
             // Pretend as if the event was handled by the app (avoid volume bar from appearing)
             return true
         }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER ||
+            keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            // Handle event to prevent default behavior
+            return true
+        }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onResume() {
         super.onResume()
+
+        // Restore fullscreen mode
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+
         resumeOrientationSensor()
         // Check camera permission again if the user switches back to the app (maybe
         // after enabling/disabling the camera permission in Settings)
@@ -588,11 +636,29 @@ open class MainActivity : AppCompatActivity(),
         lastFrame = null
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            // Restore fullscreen when window regains focus
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+    }
+
     lateinit var gestureDetector: GestureDetector
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Enable fullscreen - hide navigation bar
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         snackBar = Snackbar.make(binding.root, "", Snackbar.LENGTH_LONG)
 
@@ -604,6 +670,7 @@ open class MainActivity : AppCompatActivity(),
         imageCapturer = ImageCapturer(this)
         videoCapturer = VideoCapturer(this)
         thirdOption = binding.thirdOption
+        thirdOption.isFocusable = false
         previewLoader = binding.previewLoading
         imagePreview = binding.imagePreview
         previewView = binding.preview
@@ -634,6 +701,7 @@ open class MainActivity : AppCompatActivity(),
         })
 
         tabLayout = binding.cameraModeTabs
+        tabLayout.isFocusable = false
 
         tabLayout.setOnTouchListener { _, motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_UP) {
@@ -671,6 +739,7 @@ open class MainActivity : AppCompatActivity(),
             }
         }
         flipCameraCircle = binding.flipCameraCircle
+        flipCameraCircle.isFocusable = false
 
         flipCamIcon = binding.flipCameraIconContent
 
@@ -756,6 +825,7 @@ open class MainActivity : AppCompatActivity(),
         }
 
         captureButton = binding.captureButton
+        captureButton.isFocusable = false
         captureButton.setOnClickListener {
             resetAutoSleep()
             if (camConfig.isVideoMode) {
@@ -834,6 +904,7 @@ open class MainActivity : AppCompatActivity(),
 
         threeButtons = binding.threeButtons
         settingsIcon = binding.settingsOption
+        settingsIcon.isFocusable = false
         settingsIcon.setOnClickListener {
             if (!camConfig.isQRMode)
                 settingsDialog.show()
@@ -1007,6 +1078,7 @@ open class MainActivity : AppCompatActivity(),
         gCircleFrame = binding.gCircleFrame
 
         muteToggle = binding.muteToggle
+        muteToggle.isFocusable = false
         muteToggle.setOnClickListener {
             if (videoCapturer.isMuted) {
                 videoCapturer.unmuteRecording()

@@ -3,6 +3,7 @@ package app.grapheneos.camera.ui.activities
 import android.app.KeyguardManager
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.content.getSystemService
 import app.grapheneos.camera.CameraMode
 
@@ -15,7 +16,11 @@ class QrTile : SecureMainActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        camConfig.switchMode(CameraMode.QR_SCAN)
+
+        // QR scan is disabled - exit immediately
+        Toast.makeText(this, "QR scan is disabled", Toast.LENGTH_SHORT).show()
+        finish()
+        return
     }
 
     override fun shouldShowCameraModeTabs() = false
