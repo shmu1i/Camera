@@ -237,6 +237,23 @@ open class MainActivity : AppCompatActivity(),
 
     private lateinit var snackBar: Snackbar
 
+    // For continuous zoom with D-pad
+    private var isZoomingWithDpad = false
+    private var dpadZoomDirection = 0 // 1 for zoom in, -1 for zoom out
+    private val dpadZoomHandler = Handler(Looper.getMainLooper())
+    private val dpadZoomRunnable = object : Runnable {
+        override fun run() {
+            if (isZoomingWithDpad) {
+                if (dpadZoomDirection > 0) {
+                    cameraControl.zoomIn()
+                } else if (dpadZoomDirection < 0) {
+                    cameraControl.zoomOut()
+                }
+                dpadZoomHandler.postDelayed(this, 100) // Repeat every 100ms
+            }
+        }
+    }
+
     private lateinit var focusRing: ImageView
 
     private val focusRingHandler: Handler = Handler(Looper.getMainLooper())
@@ -508,8 +525,26 @@ open class MainActivity : AppCompatActivity(),
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        // Handle MENU key to open/close settings dialog
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            stopDpadZoom() // Stop any ongoing zoom
+            if (settingsDialog.isShowing) {
+                settingsDialog.slideDialogUp()
+            } else {
+                if (settingsIcon.isEnabled) {
+                    settingsDialog.show()
+                }
+            }
+            return true
+        }
+
         // there are no camera controls in qr mode
         if (camConfig.isQRMode) {
+            return super.onKeyUp(keyCode, event)
+        }
+
+        // If settings dialog is showing, let D-pad navigate the menu instead of camera controls
+        if (settingsDialog.isShowing) {
             return super.onKeyUp(keyCode, event)
         }
 
@@ -519,6 +554,7 @@ open class MainActivity : AppCompatActivity(),
             KeyEvent.KEYCODE_CAMERA,
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER -> {
+                stopDpadZoom() // Stop any ongoing zoom
                 captureButton.performClick()
                 return true  // Consume the event to prevent focus navigation
             }
@@ -537,6 +573,7 @@ open class MainActivity : AppCompatActivity(),
                 return true
             }
             KeyEvent.KEYCODE_DPAD_LEFT -> {
+                stopDpadZoom() // Stop any ongoing zoom
                 // Switch to CAMERA mode (only if not recording and not already in camera mode)
                 if (!videoCapturer.isRecording && camConfig.isVideoMode) {
                     // Find the CAMERA tab and call finalizeMode to animate tab selection
@@ -551,6 +588,7 @@ open class MainActivity : AppCompatActivity(),
                 return true
             }
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                stopDpadZoom() // Stop any ongoing zoom
                 // Switch to VIDEO mode (only if not recording and video is available)
                 if (!videoCapturer.isRecording &&
                     !camConfig.isVideoMode &&
@@ -566,6 +604,16 @@ open class MainActivity : AppCompatActivity(),
                 }
                 return true
             }
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                // Stop continuous zoom if it was running
+                stopDpadZoom()
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                // Stop continuous zoom if it was running
+                stopDpadZoom()
+                return true
+            }
         }
         return super.onKeyUp(keyCode, event)
     }
@@ -575,8 +623,27 @@ open class MainActivity : AppCompatActivity(),
             // Pretend as if the event was handled by the app (avoid volume bar from appearing)
             return true
         }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER ||
-            keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            // Handle MENU key to prevent default behavior
+            return true
+        }
+
+        // Handle D-pad zoom keys for continuous zoom
+        if (!settingsDialog.isShowing && !camConfig.isQRMode) {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_UP && !event!!.isLongPress && event.repeatCount == 0) {
+                startDpadZoom(1) // Zoom in
+                return true
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && !event!!.isLongPress && event.repeatCount == 0) {
+                startDpadZoom(-1) // Zoom out
+                return true
+            }
+        }
+
+        // Only handle other D-pad keys when settings dialog is not showing
+        if (!settingsDialog.isShowing &&
+            (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER ||
+            keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ||
+            keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)) {
             // Handle event to prevent default behavior
             return true
         }
@@ -628,6 +695,7 @@ open class MainActivity : AppCompatActivity(),
     override fun onPause() {
         super.onPause()
         pauseOrientationSensor()
+        stopDpadZoom()
         if (camConfig.isQRMode) {
             cancelFocusTimer()
         } else {
@@ -1908,5 +1976,26 @@ open class MainActivity : AppCompatActivity(),
             shouldRestartRecording = false
             videoCapturer.startRecording()
         }
+    }
+
+    private fun startDpadZoom(direction: Int) {
+        if (!isZoomingWithDpad) {
+            isZoomingWithDpad = true
+            dpadZoomDirection = direction
+            // Zoom immediately once
+            if (direction > 0) {
+                cameraControl.zoomIn()
+            } else {
+                cameraControl.zoomOut()
+            }
+            // Then start continuous zoom after a short delay
+            dpadZoomHandler.postDelayed(dpadZoomRunnable, 300)
+        }
+    }
+
+    private fun stopDpadZoom() {
+        isZoomingWithDpad = false
+        dpadZoomDirection = 0
+        dpadZoomHandler.removeCallbacks(dpadZoomRunnable)
     }
 }

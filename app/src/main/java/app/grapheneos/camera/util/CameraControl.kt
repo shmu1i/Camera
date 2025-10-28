@@ -7,9 +7,9 @@ class CameraControl(private val camConfig: CamConfig) {
 
     private fun zoomState(): ZoomState? = camConfig.camera?.cameraInfo?.zoomState?.value
 
-    fun zoomIn() = zoomByRatio(1f)
+    fun zoomIn() = zoomByRatio(0.1f)
 
-    fun zoomOut() = zoomByRatio(-1f)
+    fun zoomOut() = zoomByRatio(-0.1f)
 
     private fun zoomByRatio(zoomValue: Float) {
         val zoomState = zoomState() ?: return

@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -100,6 +101,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         dialog.setOnClickListener {}
 
         moreSettingsButton = binding.moreSettings
+        moreSettingsButton.isFocusable = true
+        moreSettingsButton.isFocusableInTouchMode = true
         moreSettingsButton.setOnClickListener {
             if (!mActivity.videoCapturer.isRecording) {
                 MoreSettings.start(mActivity)
@@ -162,6 +165,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         )
 
         locToggle = binding.locationToggle
+        locToggle.isFocusable = true
+        locToggle.isFocusableInTouchMode = true
         locToggle.setOnClickListener {
             if (mActivity.videoCapturer.isRecording) {
                 locToggle.isChecked = !locToggle.isChecked
@@ -174,6 +179,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         flashToggle = binding.flashToggleOption
+        flashToggle.isFocusable = true
+        flashToggle.isFocusableInTouchMode = true
         flashToggle.setOnClickListener {
             if (mActivity.requiresVideoModeOnly) {
                 mActivity.showMessage(
@@ -185,6 +192,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         aRToggle = binding.aspectRatioToggle
+        aRToggle.isFocusable = true
+        aRToggle.isFocusableInTouchMode = true
         aRToggle.setOnClickListener {
             if (camConfig.isVideoMode) {
                 aRToggle.isChecked = true
@@ -197,6 +206,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         torchToggle = binding.torchToggleOption
+        torchToggle.isFocusable = true
+        torchToggle.isFocusableInTouchMode = true
         torchToggle.setOnClickListener {
             if (camConfig.isFlashAvailable) {
                 camConfig.toggleTorchState()
@@ -209,6 +220,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         gridToggle = binding.gridToggleOption
+        gridToggle.isFocusable = true
+        gridToggle.isFocusableInTouchMode = true
         gridToggle.setOnClickListener {
             camConfig.gridType = when (camConfig.gridType) {
                 CamConfig.GridType.NONE -> CamConfig.GridType.THREE_BY_THREE
@@ -220,6 +233,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         videoQualitySpinner = binding.videoQualitySpinner
+        videoQualitySpinner.isFocusable = true
+        videoQualitySpinner.isFocusableInTouchMode = true
 
         videoQualitySpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -242,6 +257,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         waitForFocusLockSwitch = binding.waitForFocusLockSwitch
+        waitForFocusLockSwitch.isFocusable = true
+        waitForFocusLockSwitch.isFocusableInTouchMode = true
         waitForFocusLockSwitch.isChecked = camConfig.waitForFocusLock
         waitForFocusLockSwitch.setOnClickListener {
             camConfig.waitForFocusLock = waitForFocusLockSwitch.isChecked
@@ -251,6 +268,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         selfIlluminationToggle = binding.selfIlluminationSwitch
+        selfIlluminationToggle.isFocusable = true
+        selfIlluminationToggle.isFocusableInTouchMode = true
         selfIlluminationToggle.setOnCheckedChangeListener { _, isChecked ->
             camConfig.selfIlluminate = isChecked
         }
@@ -261,6 +280,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         focusTimeoutSpinner = binding.focusTimeoutSpinner
+        focusTimeoutSpinner.isFocusable = true
+        focusTimeoutSpinner.isFocusableInTouchMode = true
         focusTimeoutSpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
@@ -281,6 +302,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         focusTimeoutSpinner.setSelection(2)
 
         timerSpinner = binding.timerSpinner
+        timerSpinner.isFocusable = true
+        timerSpinner.isFocusableInTouchMode = true
         timerSpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
@@ -331,6 +354,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         timerSetting = binding.timerSetting
 
         includeAudioToggle = binding.includeAudioSwitch
+        includeAudioToggle.isFocusable = true
+        includeAudioToggle.isFocusableInTouchMode = true
         includeAudioToggle.setOnCheckedChangeListener { _, _ ->
             if (mActivity.videoCapturer.isRecording) {
                 if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.RECORD_AUDIO)
@@ -374,6 +399,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         }
 
         enableEISToggle = binding.enableEisSwitch
+        enableEISToggle.isFocusable = true
+        enableEISToggle.isFocusableInTouchMode = true
         enableEISToggle.setOnCheckedChangeListener { _, isChecked ->
             camConfig.enableEIS = isChecked
             camConfig.startCamera(true)
@@ -386,10 +413,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
         window?.attributes?.layoutInDisplayCutoutMode =
             WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
-        window?.setFlags(
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-        )
+        // Make dialog focusable for D-pad navigation
+        // Note: FLAG_NOT_FOCUSABLE removed to enable D-pad navigation
 
         var backgroundColor = ContextCompat.getColor(context, android.R.color.black)
         backgroundColor = ColorUtils.setAlphaComponent(backgroundColor, 150)
@@ -706,6 +731,14 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         settingsFrame.startAnimation(slideUpAnimation)
     }
 
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            slideDialogUp()
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
     private fun getAvailableQualities(): List<Quality> {
         val cameraInfo = camConfig.camera?.cameraInfo ?: return Collections.emptyList()
         return Recorder.getVideoCapabilities(cameraInfo).getSupportedQualities(DynamicRange.SDR)
@@ -780,6 +813,11 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         super.show()
 
         slideDialogDown()
+
+        // Request focus on the first interactive element for D-pad navigation
+        locToggle.post {
+            locToggle.requestFocus()
+        }
     }
 
     fun reloadQualities() {
