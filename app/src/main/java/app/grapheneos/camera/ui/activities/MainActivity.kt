@@ -564,6 +564,19 @@ open class MainActivity : AppCompatActivity(),
                 previewView.controller?.cameraControl?.cancelFocusAndMetering()
                 return true
             }
+            KeyEvent.KEYCODE_STAR -> {
+                camConfig.toggleCameraSelector()
+                return true // consume the event
+            }
+            KeyEvent.KEYCODE_POUND -> {
+                if (videoCapturer.isRecording) {
+                    imageCapturer.takePicture()
+                } else {
+                    openGallery()
+                    Log.i(TAG, "Attempting to open gallery...")
+                }
+                return true // consume the event
+            }
             KeyEvent.KEYCODE_ZOOM_IN -> {
                 cameraControl.zoomIn()
                 return true
